@@ -11,6 +11,7 @@
 #include<map>
 #include<algorithm>
 #include<stack>
+#include<set>
 
 
 using namespace std;
@@ -27,7 +28,6 @@ struct User{
     tuple<float,float,float,float> political_index;
     float presence;
     
-
 };
 
 
@@ -36,6 +36,10 @@ class Grafo
 private:
 
     map<string,User> nodos;
+    multiset<pair<int_fast32_t,string>> influyentes; //más seguidores
+    multiset<pair<int,string>> influenciables; //más followers
+
+
 
 public:
     Grafo(string csv_users,string csv_connection){
@@ -73,10 +77,11 @@ public:
             Usuario_actual.ID = stoll(fila[0]);
             Usuario_actual.username = fila[1];
             Usuario_actual.n_tweets = stoll(fila[2]);
-            Usuario_actual.friends_count = stoll(fila[3]);
-            Usuario_actual.follower_count = stoll(fila[4]);
+            Usuario_actual.friends_count = 0;
+            Usuario_actual.follower_count = 0;
             
             nodos.insert({Usuario_actual.username,Usuario_actual});
+            
         }
 
         archivo_users.close();
@@ -103,10 +108,35 @@ public:
                 User& usuario_2 = it_2->second;
                 usuario_2.friends.push_back(followee);
             }
-            
         }
-
         archivo_connect.close();
+
+        //Aqui se leen todos los keys y se calcula el valor de frinds y foloowers counts a partir del tamaño de vector de amigos y followers
+        //Ademas se calcula al mismo tiempos los mas influyentes
+        for(auto& pair : nodos)
+        {
+            pair.second.friends_count = pair.second.friends.size();
+            pair.second.follower_count = pair.second.followers.size();
+
+            if (influyentes.size() < 10)
+            {
+                influyentes.insert({pair.second.followers.size(),pair.first});
+                influenciables.insert({pair.second.friends.size(),pair.first});
+            }
+            else{
+                if (influyentes.begin()->first < pair.second.followers.size())//Si el primero del set, es decir el con menor cantidad de followers tiene menor cantidad que el nuevo nodo a obsercar se elimina y añade el nuevo
+                {
+                    influyentes.erase(influyentes.begin());
+                    influyentes.insert({pair.second.followers.size(),pair.first});
+                }
+
+                if (influenciables.begin()->first < pair.second.friends.size())
+                {
+                    influenciables.erase(influenciables.begin());
+                    influenciables.insert({pair.second.friends.size(),pair.first,});
+                }
+            }
+        }
     }
     
     ~Grafo() {};
@@ -141,6 +171,27 @@ public:
         cout << "--> Usuario con username '" << username << "' no encontrado en el grafo." << endl;
         }
     }
+
+
+    void TopInfluyentes(){
+        cout << "**Raking top 10 cuentas mas influyentes**"<<endl;
+        int rank = 1;
+        for (auto it = influyentes.rbegin(); it != influyentes.rend();++it,++rank)
+        {
+            cout << "Rank " << rank << ": " << "'" << it->second << "' ," << it->first << endl;  
+        }
+    }
+
+    void TopInfluenciables(){
+        cout << "**Raking top 10 cuentas mas influenciables**"<<endl;
+        int rank = 1;
+        for (auto it = influenciables.rbegin(); it != influenciables.rend();++it,++rank)
+        {
+            cout << "Rank " << rank << ": " << "'" << it->second << "' ," << it->first << endl;  
+        }
+
+
+    }
 };
 
 
@@ -149,8 +200,10 @@ int main(){
     Grafo mi_grafo("twitter_users.csv","twitter_connections.csv");
 
     
-    mi_grafo.imprimirUsuario("Cooperativa");
+    mi_grafo.imprimirUsuario("Natanie27038290");
     cout << endl;
+    mi_grafo.TopInfluenciables();
+    mi_grafo.TopInfluyentes();
 
     return 0;
 }
