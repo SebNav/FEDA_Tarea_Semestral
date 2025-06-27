@@ -12,6 +12,8 @@
 #include<algorithm>
 #include<stack>
 #include<set>
+#include<unordered_map>
+#include<unordered_set>
 
 
 using namespace std;
@@ -35,14 +37,14 @@ class Grafo
 {
 private:
 
-    map<string,User> nodos;
+    unordered_map<string,User> nodos;
     multiset<pair<int_fast32_t,string>> influyentes; //más seguidores
     multiset<pair<int,string>> influenciables; //más followers
 
 
 
 public:
-    Grafo(string csv_users,string csv_connection){
+    Grafo(const string& csv_users,const string& csv_connection){
 
         ifstream archivo_users(csv_users);
         if(!archivo_users.is_open())
@@ -142,47 +144,49 @@ public:
     ~Grafo() {};
 
 
-    void imprimirUsuario(const string& username) {
-    auto it = nodos.find(username);
-
-    if (it != nodos.end()) {
-        // it es un puntero a clave, valor)
-        // it->second nos da acceso a User.
-        User& usuario = it->second;
+    void imprimirUsuario(const string& username) const {
         
-        cout << "---Datos del Usuario: " << usuario.username << " ---" << endl;
-        cout << "ID: " << usuario.ID << endl;
-        cout << "Username: " << usuario.username << endl;
-        cout << "N de Tweets: " << usuario.n_tweets << endl;
-        cout << "N de Amigos (Friends): " << usuario.friends_count << endl;
-        cout << "N de Seguidores (Followers): " << usuario.follower_count << endl;
-        cout << "Siguiendo :";
-        for(string amigos : usuario.friends){
-            cout << " " << amigos << " ," << endl;}
-        cout << endl;
-        cout << "Followers :";
-        for(string seguidores : usuario.followers){
-            cout << " " << seguidores << " ," << endl;}
-        cout << endl;
-        cout << "Indice Politico : [" << get<0>(usuario.political_index) << "," << get<1>(usuario.political_index)<<"," << get<2>(usuario.political_index)<<"," << get<3>(usuario.political_index) << "]" <<  endl;
-        cout << "------------------------------------------" << endl;
-    } else {
-        // Si it == nodos.end(), el usuario no fue encontrado en el mapa.
-        cout << "--> Usuario con username '" << username << "' no encontrado en el grafo." << endl;
+        auto it = nodos.find(username);
+        if (it != nodos.end()) {
+            // it es un puntero a clave, valor)
+            // it->second nos da acceso a User.
+            const User& usuario = it->second; //Debido a que se usa const en la funcion, es necesario usar const aqui ya
+            
+            cout << "---Datos del Usuario: " << usuario.username << " ---" << endl;
+            cout << "ID: " << usuario.ID << endl;
+            cout << "Username: " << usuario.username << endl;
+            cout << "N de Tweets: " << usuario.n_tweets << endl;
+            cout << "N de Amigos (Friends): " << usuario.friends_count << endl;
+            cout << "N de Seguidores (Followers): " << usuario.follower_count << endl;
+            cout << "Siguiendo :";
+            for(string amigos : usuario.friends){
+                cout << " " << amigos << " ," << endl;}
+            cout << endl;
+            cout << "Followers :";
+            for(string seguidores : usuario.followers){
+                cout << " " << seguidores << " ," << endl;}
+            cout << endl;
+            cout << "Indice Politico : [" << get<0>(usuario.political_index) << "," << get<1>(usuario.political_index)<<"," << get<2>(usuario.political_index)<<"," << get<3>(usuario.political_index) << "]" <<  endl;
+            cout << "------------------------------------------" << endl;
+        } else {
+            // Si it == nodos.end(), el usuario no fue encontrado en el mapa.
+            cout << "--> Usuario con username '" << username << "' no encontrado en el grafo." << endl;
+            }
         }
-    }
 
 
-    void TopInfluyentes(){
-        cout << "**Raking top 10 cuentas mas influyentes**"<<endl;
-        int rank = 1;
-        for (auto it = influyentes.rbegin(); it != influyentes.rend();++it,++rank)
-        {
-            cout << "Rank " << rank << ": " << "'" << it->second << "' ," << it->first << endl;  
+    void TopInfluyentes() const {
+
+            cout << "**Raking top 10 cuentas mas influyentes**"<<endl;
+            int rank = 1;
+            for (auto it = influyentes.rbegin(); it != influyentes.rend();++it,++rank)
+            {
+                cout << "Rank " << rank << ": " << "'" << it->second << "' ," << it->first << endl;  
+            }
         }
-    }
 
-    void TopInfluenciables(){
+    void TopInfluenciables() const {
+
         cout << "**Raking top 10 cuentas mas influenciables**"<<endl;
         int rank = 1;
         for (auto it = influenciables.rbegin(); it != influenciables.rend();++it,++rank)
@@ -192,8 +196,93 @@ public:
 
 
     }
+    //Implementacion de funcion que retorna los vecinos de entrada o in-degree  de un nodo o followers de una cuenta
+    vector<string> vecinos_in(const string& username) const{
+
+        auto it = nodos.find(username);
+        if(it != nodos.end())   return it->second.followers;   
+        else { 
+        cout << username << " no es parte del grafo!!!!" << endl;
+        return {};
+        } 
+    }
+    //Implementacion de funcion que retorna los vecinos de salida o out-degree  de un nodo o seguidos de una cuenta
+    vector<string> vecinos_out(const string& username) const{
+
+        auto it = nodos.find(username);
+        if(it != nodos.end())   return it->second.friends;   
+        else { 
+        cout << username << " no es parte del grafo!!!!" << endl;
+        return {};
+        } 
+    }
+    //Implementacion de DFS a partir de los datos los vecinos in o out dependiendo de la opcion colocado, Si la variable IN_degree es verdadera se obtiene el DFS normal,
+    //En caso contrario se obtiene el DBS del grafo inverso
+    vector<string> DFS(const string& username,const bool IN_degree) const{
+        auto it = nodos.find(username);
+        if (it != nodos.end())
+        {
+            vector<string> resultado; //Vector donde se almacenara el recorrido del dfs
+            unordered_set<string> visitados; //A diferencia de unordered map que usa key y valor este solo usa una clave, por lo que hace mas facil e eficiente saber si visitamos o no ese nodo
+            stack<string> pila; 
+            pila.push(username);
+
+            while (!pila.empty())
+            {
+                string u = pila.top();
+                pila.pop();
+                if (visitados.count(u) == 0) //Si no existe ningun elemento en el unordered_set significa que no ha sido visitado ese nodo
+                {
+
+                    visitados.insert(u); //Lo guarda como visitado
+                    resultado.push_back(u);
+
+                    vector<string> vecinos;
+                    if (IN_degree == true) //Busca el DFS de los vecinos que llegan, esto genera el DFS inverso del nodo
+                    {
+                        vecinos = vecinos_in(u);
+                        for (const string& n : vecinos){
+                            if(visitados.count(n) ==0) pila.push(n);
+                        }
+                    }
+                    else{
+                        vecinos = vecinos_out(u);
+                        for (const string& n : vecinos){
+                            if(visitados.count(n) ==0) pila.push(n);
+                        }
+
+                    }
+                    
+                    
+                }
+                
+
+            }
+            return resultado;
+            
+        }
+        else { 
+        cout << username << " no es parte del grafo!!!!" << endl;
+        return {};
+        }
+        
+
+    }
+    
+
 };
 
+
+void print_string_vector(const vector<string>& s) {
+
+    for (string u : s)
+    {
+        cout<< u << endl;
+    }
+
+    return;
+
+}
 
 int main(){
 
@@ -205,6 +294,22 @@ int main(){
     mi_grafo.TopInfluenciables();
     mi_grafo.TopInfluyentes();
 
+    vector<string> vecinos_in = mi_grafo.vecinos_in("patriciorosas");
+    cout << "vecinos in/followers de patriciorosas" << endl;
+    print_string_vector(vecinos_in);
+    vector<string> vecinos_out = mi_grafo.vecinos_out("patriciorosas");
+    cout << "vecinos out/seguidos de patriciorosas" << endl;
+    print_string_vector(vecinos_out);
+
+    vector<string> DFS_a = mi_grafo.DFS("patriciorosas",true);
+    cout << "*****DFS_IN desde patriciorosas*****" << endl;
+    print_string_vector(DFS_a);
+
+    vector<string> DFS_b = mi_grafo.DFS("patriciorosas",false);
+    cout << "*****DFS_out desde patriciorosas*****" << endl;
+    //print_string_vector(DFS_b);
+
+    
     return 0;
 }
 
