@@ -14,6 +14,7 @@
 #include<set>
 #include<unordered_map>
 #include<unordered_set>
+#include<queue>
 
 
 using namespace std;
@@ -41,7 +42,30 @@ private:
     multiset<pair<int_fast32_t,string>> influyentes; //más seguidores
     multiset<pair<int,string>> influenciables; //más followers
 
+    //Proceso de visita para la implementacion recursiva de DFS, si pre_order es Verdadero se reporta el recorrido del BFS en forma pre-order de lo contrario en post-order
+    void DFS_visit(const string& u,unordered_set<string>& visitados,vector<string>& resultado, bool IN_degree,bool Pre_order) const{
+        
+        visitados.insert(u);
+        vector<string> vecinos;
+        if (Pre_order)
+        {
+            resultado.push_back(u);
+        }
 
+        if (IN_degree) vecinos = vecinos_in(u);
+        else vecinos = vecinos_out(u);
+
+        for (const string& n : vecinos)
+        {
+            if (visitados.count(n)==0)
+            {
+                DFS_visit(n,visitados,resultado,IN_degree,Pre_order);
+            }
+        }
+        if (!Pre_order) resultado.push_back(u);
+
+        return;
+    }
 
 public:
     Grafo(const string& csv_users,const string& csv_connection){
@@ -216,72 +240,109 @@ public:
         return {};
         } 
     }
-    //Implementacion de DFS a partir de los datos los vecinos in o out dependiendo de la opcion colocado, Si la variable IN_degree es verdadera se obtiene el DFS normal,
-    //En caso contrario se obtiene el DBS del grafo inverso
-    vector<string> DFS(const string& username,const bool IN_degree) const{
+    //Implementacion de DFS a partir de los datos los vecinos in o out dependiendo de la opcion colocado,
+    // Si IN_degree es false, se obtiene el DFS normal (vecinos_out)
+    // Si IN_degree es true, se obtiene el DFS del grafo inverso (vecinos_in)
+    //Si Pre_order el resultado se reporta en forma pre order, sino se reporta en postorder
+    vector<string> DFS(const string& username,const bool IN_degree,bool Pre_order) const{
+
+        if(nodos.count(username) == 0){
+            cout << username << " no es parte del grafo!!!!" << endl;
+            return {};
+        }
+
+        vector<string> resultados;
+        unordered_set<string> visitados;
+        
+        DFS_visit(username,visitados,resultados,IN_degree,Pre_order);
+        
+        return resultados;
+    }
+    
+    vector<string> BFS(const string& username,const bool IN_degree) const{
         auto it = nodos.find(username);
         if (it != nodos.end())
         {
             vector<string> resultado; //Vector donde se almacenara el recorrido del dfs
             unordered_set<string> visitados; //A diferencia de unordered map que usa key y valor este solo usa una clave, por lo que hace mas facil e eficiente saber si visitamos o no ese nodo
-            stack<string> pila; 
-            pila.push(username);
-
-            while (!pila.empty())
-            {
-                string u = pila.top();
-                pila.pop();
-                if (visitados.count(u) == 0) //Si no existe ningun elemento en el unordered_set significa que no ha sido visitado ese nodo
-                {
-
-                    visitados.insert(u); //Lo guarda como visitado
-                    resultado.push_back(u);
-
-                    vector<string> vecinos;
-                    if (IN_degree == true) //Busca el DFS de los vecinos que llegan, esto genera el DFS inverso del nodo
-                    {
-                        vecinos = vecinos_in(u);
-                        for (const string& n : vecinos){
-                            if(visitados.count(n) ==0) pila.push(n);
-                        }
-                    }
-                    else{
-                        vecinos = vecinos_out(u);
-                        for (const string& n : vecinos){
-                            if(visitados.count(n) ==0) pila.push(n);
-                        }
-
-                    }
-                    
-                    
-                }
-                
-
-            }
-            return resultado;
+            queue<string> cola; 
             
+            cola.push(username);
+            visitados.insert(username);
+            while (!cola.empty())
+            {
+                string u = cola.front();
+                cola.pop();
+                resultado.push_back(u);
+
+                vector<string> vecinos;
+                if (IN_degree) vecinos = vecinos_in(u);
+                else vecinos = vecinos_out(u);
+
+                for (const string& n : vecinos) {
+                    if (visitados.count(n)==0) {
+                        visitados.insert(n);
+                        cola.push(n);
+                    }
+                }
+            }
+            return resultado;  
         }
         else { 
         cout << username << " no es parte del grafo!!!!" << endl;
         return {};
         }
-        
+    }
+    //Implementacion de funcion que calcula las componentes fuertemente conexas del grafo utilizando el algoritmo de Kosaraju
+    vector<vector<string>> CFC() const{
 
+        vector<string> orden; //Orden de visita para el grafo invertido
+        unordered_set<string> visitados;
+
+        //Se recorren todos los nodos del grafo para obtener el orden de finalizacion mediante post orden de DFS
+        for (const auto& par : nodos)
+        {
+            vector<string> DFS_out;
+            if(visitados.count(par.first)==0) //Si el nodo del grafo ya no ha sido visitado, se inicia un DFS desde este nodo
+            {
+                DFS_visit(par.first,visitados,orden,false,false);
+            }
+        }
+        //Se pasa el orden a una pila para tener el orden necesario para relizar el DFS en el grafo inverso
+        stack<string> pila;
+        for (const string& o: orden)
+        {
+            pila.push(o);
+        }
+
+        vector<vector<string>> componentes_FC;
+        visitados.clear(); //Se limpia visitados porq se volvera a realizar DFS esta vez para obtener las componestes
+
+        while (!pila.empty())
+        {
+            string nodo = pila.top();
+            pila.pop();
+            vector<string> componenteFC;
+            if(visitados.count(nodo) == 0) //Si el nodo no ha sido visitado
+            {
+                DFS_visit(nodo,visitados,componenteFC,true,true);
+                componentes_FC.push_back(componenteFC);
+            }
+        }
+        return componentes_FC;
+    }};
+
+
+
+
+void print_string_vector(const vector<string>& s,const string& frase_previa) {
+
+    cout << "*******" <<frase_previa <<"*******"<< endl;
+    for (size_t i = 0; i < s.size(); ++i) {
+        cout << s[i] << endl;
     }
     
-
-};
-
-
-void print_string_vector(const vector<string>& s) {
-
-    for (string u : s)
-    {
-        cout<< u << endl;
-    }
-
     return;
-
 }
 
 int main(){
@@ -295,21 +356,28 @@ int main(){
     mi_grafo.TopInfluyentes();
 
     vector<string> vecinos_in = mi_grafo.vecinos_in("patriciorosas");
-    cout << "vecinos in/followers de patriciorosas" << endl;
-    print_string_vector(vecinos_in);
+    //print_string_vector(vecinos_in,"vecinos in/followers de patriciorosas");
+
     vector<string> vecinos_out = mi_grafo.vecinos_out("patriciorosas");
-    cout << "vecinos out/seguidos de patriciorosas" << endl;
-    print_string_vector(vecinos_out);
+    //print_string_vector(vecinos_out,"vecinos out/seguidos de patriciorosas");
 
-    vector<string> DFS_a = mi_grafo.DFS("patriciorosas",true);
-    cout << "*****DFS_IN desde patriciorosas*****" << endl;
-    print_string_vector(DFS_a);
+    vector<string> DFS_a = mi_grafo.DFS("patriciorosas",false,true);
 
-    vector<string> DFS_b = mi_grafo.DFS("patriciorosas",false);
-    cout << "*****DFS_out desde patriciorosas*****" << endl;
-    //print_string_vector(DFS_b);
+    print_string_vector(DFS_a,"DFS desde 'c_flores_c' out degree, con pre orden");
 
-    
+    vector<string> DFS_b = mi_grafo.DFS("patriciorosas",false,false);
+    print_string_vector(DFS_b,"DFS desde 'c_flores_c' out degree, con post orden");
+
+    vector<vector<string>> CFC = mi_grafo.CFC();
+    cout << "El grafo tiene en total " << CFC.size() << "componentes fuertemente conexas" <<endl;
+    int i = 1;
+    for(const vector<string>& componente : CFC){
+        if(componente.size() > 1) cout << "CFC " << i++ << " N° nodos : "  << componente.size() << endl;
+
+    }
+
+
+
     return 0;
 }
 
