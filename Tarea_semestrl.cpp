@@ -39,7 +39,7 @@ class Grafo
 private:
 
     unordered_map<string,User> nodos;
-    multiset<pair<int_fast32_t,string>> influyentes; //más seguidores
+    multiset<pair<int,string>> influyentes; //más seguidores
     multiset<pair<int,string>> influenciables; //más followers
 
     //Proceso de visita para la implementacion recursiva de DFS, si pre_order es Verdadero se reporta el recorrido del BFS en forma pre-order de lo contrario en post-order
