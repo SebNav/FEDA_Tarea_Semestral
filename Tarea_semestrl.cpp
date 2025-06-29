@@ -42,7 +42,7 @@ private:
     multiset<pair<int,string>> influyentes; //más seguidores
     multiset<pair<int,string>> influenciables; //más followers
 
-    //Proceso de visita para la implementacion recursiva de DFS, si pre_order es Verdadero se reporta el recorrido del BFS en forma pre-order de lo contrario en post-order
+    //Proceso de visita para la implementacion recursiva de DFS, si pre_order es Verdadero se reporta el recorrido del DFS en forma pre-order de lo contrario en post-order
     void DFS_visit(const string& u,unordered_set<string>& visitados,vector<string>& resultado, bool IN_degree,bool Pre_order) const{
         
         visitados.insert(u);
@@ -68,6 +68,7 @@ private:
     }
 
 public:
+    //Constructor del grafo a patir de los archivos csv con la informacion del usuario y las conecciones del grafo
     Grafo(const string& csv_users,const string& csv_connection){
 
         ifstream archivo_users(csv_users);
@@ -112,6 +113,7 @@ public:
 
         archivo_users.close();
 
+        //Se lee cada linea del archivo connections y se guarda en los amigos y followers, la respectiva informaion de usuario
         while(getline(archivo_connect,linea)){
 
             stringstream ss(linea);
@@ -176,7 +178,7 @@ public:
             // it->second nos da acceso a User.
             const User& usuario = it->second; //Debido a que se usa const en la funcion, es necesario usar const aqui ya
             
-            cout << "---Datos del Usuario: " << usuario.username << " ---" << endl;
+            cout << "**Datos del Usuario: " << usuario.username << " ---" << endl;
             cout << "ID: " << usuario.ID << endl;
             cout << "Username: " << usuario.username << endl;
             cout << "N de Tweets: " << usuario.n_tweets << endl;
@@ -293,6 +295,7 @@ public:
         return {};
         }
     }
+    
     //Implementacion de funcion que calcula las componentes fuertemente conexas del grafo utilizando el algoritmo de Kosaraju
     vector<vector<string>> CFC() const{
 
