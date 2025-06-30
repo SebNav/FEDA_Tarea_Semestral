@@ -28,8 +28,8 @@ struct User{
     int friends_count;
     vector<string> friends;
     vector<string> followers;
-    tuple<float,float,float,float> political_index;
-    float presence;
+    vector<float> political_index;
+    float PageRank;
     
 };
 
@@ -40,7 +40,10 @@ private:
 
     unordered_map<string,User> nodos;
     multiset<pair<int,string>> influyentes; //más seguidores
+    multiset<pair<int,string>> influyentes; //más seguidores
     multiset<pair<int,string>> influenciables; //más followers
+    vector<string>   keys; // Vector que guardara todos los keys, este vector simplemente se utilzara para obtener keys de forma aletoria
+
 
     //Proceso de visita para la implementacion recursiva de DFS, si pre_order es Verdadero se reporta el recorrido del DFS en forma pre-order de lo contrario en post-order
     void DFS_visit(const string& u,unordered_set<string>& visitados,vector<string>& resultado, bool IN_degree,bool Pre_order) const{
@@ -120,7 +123,7 @@ public:
             string followee,follower;
             getline(ss, followee, ';');
             getline(ss, follower);
-            cout << followee<<endl;
+            //cout << followee<<endl;
             //Se busca la cuenta del seguido y se añade su seguidor
             auto it_1 = nodos.find(followee);
             if (it_1 != nodos.end())
@@ -143,9 +146,11 @@ public:
         //Ademas se calcula al mismo tiempos los mas influyentes
         for(auto& pair : nodos)
         {
-            pair.second.friends_count = pair.second.friends.size();
-            pair.second.follower_count = pair.second.followers.size();
-
+            pair.second.friends_count   = pair.second.friends.size();
+            pair.second.follower_count  = pair.second.followers.size();
+            pair.second.PageRank        = 1.0/nodos.size(); //Inicalizacion del PageRank de cada usuario
+            pair.second.political_index = {0.0,0.0,0.0,0.0}; //Inicializacion del indice politico de cada usuario
+            keys.push_back(pair.first);
             if (influyentes.size() < 10)
             {
                 influyentes.insert({pair.second.followers.size(),pair.first});
@@ -161,10 +166,12 @@ public:
                 if (influenciables.begin()->first < pair.second.friends.size())
                 {
                     influenciables.erase(influenciables.begin());
-                    influenciables.insert({pair.second.friends.size(),pair.first,});
+                    influenciables.insert({pair.second.friends.size(),pair.first});
                 }
             }
+            
         }
+        
     }
     
     ~Grafo() {};
@@ -178,21 +185,22 @@ public:
             // it->second nos da acceso a User.
             const User& usuario = it->second; //Debido a que se usa const en la funcion, es necesario usar const aqui ya
             
-            cout << "**Datos del Usuario: " << usuario.username << " ---" << endl;
-            cout << "ID: " << usuario.ID << endl;
+            cout << "---Datos del Usuario: " << usuario.username << " ---" << endl;
+            //cout << "ID: " << usuario.ID << endl;
             cout << "Username: " << usuario.username << endl;
-            cout << "N de Tweets: " << usuario.n_tweets << endl;
+            //cout << "N de Tweets: " << usuario.n_tweets << endl;
             cout << "N de Amigos (Friends): " << usuario.friends_count << endl;
             cout << "N de Seguidores (Followers): " << usuario.follower_count << endl;
+            cout << "Inlfuencia (PageRank) : " << usuario.PageRank << endl;
             cout << "Siguiendo :";
             for(string amigos : usuario.friends){
-                cout << " " << amigos << " ," << endl;}
+                cout << " " << amigos << " ,";}
             cout << endl;
             cout << "Followers :";
             for(string seguidores : usuario.followers){
-                cout << " " << seguidores << " ," << endl;}
+                cout << " " << seguidores << " ,";}
             cout << endl;
-            cout << "Indice Politico : [" << get<0>(usuario.political_index) << "," << get<1>(usuario.political_index)<<"," << get<2>(usuario.political_index)<<"," << get<3>(usuario.political_index) << "]" <<  endl;
+            cout << "Indice Politico [I, C, L, D]: [" << usuario.political_index[0] << "," << usuario.political_index[1]<<"," << usuario.political_index[2]<<"," << usuario.political_index[3] << "]" <<  endl;
             cout << "------------------------------------------" << endl;
         } else {
             // Si it == nodos.end(), el usuario no fue encontrado en el mapa.
@@ -207,7 +215,10 @@ public:
             int rank = 1;
             for (auto it = influyentes.rbegin(); it != influyentes.rend();++it,++rank)
             {
-                cout << "Rank " << rank << ": " << "'" << it->second << "' ," << it->first << endl;  
+
+
+                cout << "Rank " << rank << ": " << "'" << it->second << "' ," << it->first 
+                <<   ", Indice Politico [I, C, L, D]: [" << nodos.at(it->second).political_index[0] <<  "," << nodos.at(it->second).political_index[1] <<"," << nodos.at(it->second).political_index[2] <<"," << nodos.at(it->second).political_index[3] << "]" <<  endl;
             }
         }
 
@@ -217,7 +228,8 @@ public:
         int rank = 1;
         for (auto it = influenciables.rbegin(); it != influenciables.rend();++it,++rank)
         {
-            cout << "Rank " << rank << ": " << "'" << it->second << "' ," << it->first << endl;  
+                cout << "Rank " << rank << ": " << "'" << it->second << "' ," << it->first 
+                <<   "Indice Politico [I, C, L, D]: [" << nodos.at(it->second).political_index[0] <<  "," << nodos.at(it->second).political_index[1] <<"," << nodos.at(it->second).political_index[2] <<"," << nodos.at(it->second).political_index[3] << "]" <<  endl;
         }
 
 
@@ -333,8 +345,130 @@ public:
             }
         }
         return componentes_FC;
-    }};
 
+
+    }
+
+    void RandomPrint(const int& cantidad,const int& random_state) const{
+
+        default_random_engine engine(random_state);
+        uniform_int_distribution<int> distribution(0,keys.size()-1);
+        for (size_t i = 0; i < cantidad; i++)
+        {
+            int ran_index = distribution(engine);
+            string random_key = keys[ran_index];   
+            imprimirUsuario(random_key);
+        }
+        
+        return;
+        
+    }
+    
+    //Funcion que calcula el PageRank lo que seria el nivel de inflencia de cada nodo a partir del algoritmo PageRank de google
+    void PageRanking(const int& iterations) {
+
+        unordered_map<string,float> next_PageRank;
+        float PageRank_value;
+        float d = 0.85; //Factor de amortiguacion
+        float suma_votos;//Sumatoria de votos del nodo
+        //proceso iterativo que modificia el PageRank de cada Nodo,
+
+        cout << "Se inicia el proceso de calculo de PageRank para cada nodo del grafo para " << iterations << " cantidad de iteraciones" << endl;
+        for (size_t i = 0; i < iterations; i++)
+        {
+            //cout << "**Iteracion " << i << "**" << endl; 
+            //Se itera para cada nodo y se actualiza el page rank
+            for (auto& pair: nodos)
+            {
+                //Calculo de la formula standar de PageRank
+                suma_votos = 0;
+                for (const string& key: vecinos_in(pair.first))
+                {
+                    suma_votos += nodos[key].PageRank/static_cast<float>(nodos[key].friends_count);
+                    
+                }
+
+                PageRank_value = (1-d)/nodos.size() + d*suma_votos;
+                next_PageRank.insert({pair.first,PageRank_value});
+                
+            }
+            //Actualizacion del PageRank
+            for (auto& pair: nodos)
+            {
+                //cout << next_PageRank[pair.first]<< endl;
+                pair.second.PageRank = next_PageRank[pair.first];
+            }
+            //Se limpia la variable
+            next_PageRank.clear();
+            
+        }
+        
+
+    }    
+    
+    //Algoritmo de propagacion que calcula a partir de nodos semillas la influecian politica utilizando el Influencia(Pagerank) de cada nodo
+    void Tendencia_politica(const string& izquieda,const string& centro,const string& libertario,const string& derecha)
+    {
+        //Se inicializan los nodos semillas de los distintos partidos politicos
+        nodos[izquieda].political_index   = {100.0,0,0,0};
+        nodos[centro].political_index     = {0,100.0,0,0};
+        nodos[libertario].political_index = {0,0,100.0,0};
+        nodos[derecha].political_index    = {0,0,0,100.0};
+
+        //Cantidad de iteraciones, al igual que pageRank a mayor cantidad de iteraciones los nodos convergen a un valor
+        for (int i = 0; i < 50; ++i) {
+            unordered_map<string, vector<float>> next_political_index;
+            
+            //Para cada nodo se actualiza su valor
+            for (const auto& pair : nodos) {
+
+
+                // Si es un nodo semilla, su vector no cambia
+                if (pair.first == izquieda || pair.first == centro || pair.first == libertario || pair.first ==derecha) {
+
+                    next_political_index[pair.first] = pair.second.political_index;
+                    continue;
+                }
+
+                // Si no es semilla, calcular su nuevo vector
+                vector<float> suma_ponderada_vector(4, 0.0);
+                float suma_de_pesos = 0.0;//Suma de los pesos de todos los vecinos de salida para posteriormente ponderarlo y obtener valors entre 0 y 100
+                //Se itera para cada usuario que sigue el nodo u para saber su indice polico
+                //"Dime a quien sigues y te dire tu indice politico...., Ademas de más informacion sobre el grafo ajjaja"
+                for (const string& v : vecinos_out(pair.first)) {
+                    //Se obtiene el indice politico para cada categoria politica
+                    for (int j = 0; j < 4; ++j) {
+                        suma_ponderada_vector[j] += nodos[v].political_index[j] * nodos[v].PageRank;
+                    }
+                    suma_de_pesos += nodos[v].PageRank; 
+                }
+
+                vector<float> nuevo_vector(4, 0.0);
+                //Ponderacion de indice politico
+                if (suma_de_pesos > 0) {
+                    for (int j = 0; j < 4; ++j) {
+                        nuevo_vector[j] = suma_ponderada_vector[j] / suma_de_pesos;
+                    }
+                }
+                
+                // Normalización para que sume 100%
+                float total_score = accumulate(nuevo_vector.begin(), nuevo_vector.end(), 0.0f);
+                if (total_score > 0) {
+                    for (int j = 0; j < 4; ++j) {
+                        nuevo_vector[j] = (nuevo_vector[j] / total_score) * 100.0f;
+                    }
+                }
+                next_political_index[pair.first] = nuevo_vector;
+            }
+
+            // Actualizar todos los vectores al final de la iteración
+            for (auto& pair : nodos) {
+                pair.second.political_index = next_political_index[pair.first];
+            }
+        }
+        cout << "Cálculo de tendencias Politicas finalizado finalizado." << endl;
+    }
+};
 
 
 
@@ -351,14 +485,30 @@ void print_string_vector(const vector<string>& s,const string& frase_previa) {
 int main(){
 
     Grafo mi_grafo("twitter_users.csv","twitter_connections.csv");
+    string izquierda = "Cooperativa";
+    string centro = "latercera";
+    string libertario = "elmostrador";
+    string derecha = "soyvaldiviacl";
 
-    
-    mi_grafo.imprimirUsuario("Natanie27038290");
-    cout << endl;
+
+    mi_grafo.RandomPrint(3,42);
+    mi_grafo.PageRanking(100);
+    mi_grafo.RandomPrint(3,42);
+
+
+    mi_grafo.Tendencia_politica(izquierda,centro,libertario,derecha);
+
+    mi_grafo.imprimirUsuario("Cooperativa");
+    mi_grafo.imprimirUsuario("latercera");
+    mi_grafo.imprimirUsuario("elmostrador");
+    mi_grafo.imprimirUsuario("CherieA81311446");
+    mi_grafo.RandomPrint(5,10);
+
+
     mi_grafo.TopInfluenciables();
     mi_grafo.TopInfluyentes();
 
-    vector<string> vecinos_in = mi_grafo.vecinos_in("patriciorosas");
+/*     vector<string> vecinos_in = mi_grafo.vecinos_in("patriciorosas");
     //print_string_vector(vecinos_in,"vecinos in/followers de patriciorosas");
 
     vector<string> vecinos_out = mi_grafo.vecinos_out("patriciorosas");
@@ -377,8 +527,7 @@ int main(){
     for(const vector<string>& componente : CFC){
         if(componente.size() > 1) cout << "CFC " << i++ << " N° nodos : "  << componente.size() << endl;
 
-    }
-
+    } */
 
 
     return 0;
