@@ -3,6 +3,9 @@
         "iostream": "cpp",
         "fstream": "cpp",
         "ostream": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "array": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp"
     }
 }
