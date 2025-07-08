@@ -19,45 +19,50 @@
 
 using namespace std;
 
+
+//Estructura User que contiene la informacion de un usuario de Twitter
 struct User{
 
-    long long ID;
+    long long ID; 
     string username;
     int n_tweets;
     int follower_count;
     int friends_count;
     vector<string> friends;
     vector<string> followers;
-    vector<float> political_index;
-    float PageRank;
+    vector<float> political_index; //Vector que contendra el indice politico de cada usuario
+    float PageRank; //Indice de influencia de cada nodo basado en el algoritmo de pageRank google
     
 };
 
-
+//Clase que representa un grafo dirigado de usuarios de twitters
 class Grafo
 {
 private:
 
-    unordered_map<string,User> nodos;
-    multiset<pair<int,string>> influyentes; //más seguidores
-    multiset<pair<int,string>> influyentes; //más seguidores
-    multiset<pair<int,string>> influenciables; //más followers
+    unordered_map<string,User> nodos; //Undordered map que es la base del grafo, donde la key sera el username del grafo y se guardaran en los valores la variable Usuario
+    multiset<pair<int,string>> influyentes; //Variable del tipo multiset que guardara el Top 10 de usuarios mas influyentes (Más followers)
+    multiset<pair<int,string>> influenciables; //Variable del tipo multiset que guardara el Top 10 de usuarios mas influyenciables (Más seguidos)
     vector<string>   keys; // Vector que guardara todos los keys, este vector simplemente se utilzara para obtener keys de forma aletoria
 
 
-    //Proceso de visita para la implementacion recursiva de DFS, si pre_order es Verdadero se reporta el recorrido del DFS en forma pre-order de lo contrario en post-order
+    //Proceso de visita para la implementacion recursiva de DFS
+    //Si pre_order es Verdadero se reporta el recorrido del DFS en forma pre-order de lo contrario en post-order
     void DFS_visit(const string& u,unordered_set<string>& visitados,vector<string>& resultado, bool IN_degree,bool Pre_order) const{
         
-        visitados.insert(u);
+        visitados.insert(u); //Se marca que el nodo ha sido visitado
         vector<string> vecinos;
+        //Si pre-oder, se agrega el nodo al resultado antes de visitar vecinos
         if (Pre_order)
         {
             resultado.push_back(u);
         }
 
+        //Selecciona vecinos de entrada (followers) o salida (seguidos)
         if (IN_degree) vecinos = vecinos_in(u);
         else vecinos = vecinos_out(u);
 
+        //Se visita recurrente todos los vecinos no visitados
         for (const string& n : vecinos)
         {
             if (visitados.count(n)==0)
@@ -65,6 +70,7 @@ private:
                 DFS_visit(n,visitados,resultado,IN_degree,Pre_order);
             }
         }
+        //Si es post-order, se agrega el nodo al resultado despues de visitar todos los vecinos
         if (!Pre_order) resultado.push_back(u);
 
         return;
@@ -74,6 +80,7 @@ public:
     //Constructor del grafo a patir de los archivos csv con la informacion del usuario y las conecciones del grafo
     Grafo(const string& csv_users,const string& csv_connection){
 
+        //Se intentan abrir los archivos de usuarios y conecciones
         ifstream archivo_users(csv_users);
         if(!archivo_users.is_open())
         {
@@ -92,16 +99,18 @@ public:
         string linea;
         getline(archivo_users,linea);//No se leen los ID
 
+        //Se lee cada linea del archivo 
         while(getline(archivo_users,linea))
         {
             stringstream ss(linea);
             string info;
             vector<string> fila;
-
+            //Se separa las sentencias si encuentra un delimitador ';'
             while (getline(ss,info,';'))
             {
                 fila.push_back(info);
             }
+            //Se crea la variable Ususario actual y se guaran la informacion que esta presente en el archivo leido
             User Usuario_actual;
 
             Usuario_actual.ID = stoll(fila[0]);
@@ -110,21 +119,26 @@ public:
             Usuario_actual.friends_count = 0;
             Usuario_actual.follower_count = 0;
             
+            //Se añade al Unordered_map el usuario usando su username como key y sus informacion como valores
             nodos.insert({Usuario_actual.username,Usuario_actual});
             
         }
-
-        archivo_users.close();
+        
+        archivo_users.close(); //Se cierra el archivo una vez que se termino la lectura de todas las lineas
 
         //Se lee cada linea del archivo connections y se guarda en los amigos y followers, la respectiva informaion de usuario
         while(getline(archivo_connect,linea)){
 
             stringstream ss(linea);
             string followee,follower;
+            //Se leen y guardan de cada linea
             getline(ss, followee, ';');
             getline(ss, follower);
             //cout << followee<<endl;
-            //Se busca la cuenta del seguido y se añade su seguidor
+            //Debido a que se tiene un grafo dirigo, donde la información del archivo muestra quien sigue a que usuario
+            //Tambien podemos usar esta informacion para saber quienes son los followers de que usuario
+            //Para ello se busca el followee para saber si se añadio en la etapa anterio y se guardar el follower en la variable friends indicado que este usuario sige a X
+            //Ademas busamos el followers y añadimos a el followee como seguidor(followers) del usuario
             auto it_1 = nodos.find(followee);
             if (it_1 != nodos.end())
             {
@@ -140,24 +154,28 @@ public:
                 usuario_2.friends.push_back(followee);
             }
         }
-        archivo_connect.close();
+        archivo_connect.close();//Se cierra el archivo
 
-        //Aqui se leen todos los keys y se calcula el valor de frinds y foloowers counts a partir del tamaño de vector de amigos y followers
+        //Aqui se leen todos los keys y se calcula la cantidad de friends y foloowers de cada usuario a partir del tamaño del vector de friends y followers
         //Ademas se calcula al mismo tiempos los mas influyentes
         for(auto& pair : nodos)
         {
-            pair.second.friends_count   = pair.second.friends.size();
+            pair.second.friends_count   = pair.second.friends.size(); 
             pair.second.follower_count  = pair.second.followers.size();
             pair.second.PageRank        = 1.0/nodos.size(); //Inicalizacion del PageRank de cada usuario
             pair.second.political_index = {0.0,0.0,0.0,0.0}; //Inicializacion del indice politico de cada usuario
-            keys.push_back(pair.first);
-            if (influyentes.size() < 10)
+            keys.push_back(pair.first); //Se añade el nombre de usuario al vector de keys
+            //Mientras no se tengan 10 datos simplemente se guardan el usuario y su numero de seguidores y friends
+            //Se guarda primero en el par la cantidad de friends/followers ya que el multiset ordenara a partir de esta variable first
+            if (influyentes.size() < 10) 
             {
                 influyentes.insert({pair.second.followers.size(),pair.first});
                 influenciables.insert({pair.second.friends.size(),pair.first});
             }
+
+            //Si el primero valor del set, es decir el con menor cantidad de followers tiene menor cantidad que el nuevo nodo a observado se elimina y añade el nuevo
             else{
-                if (influyentes.begin()->first < pair.second.followers.size())//Si el primero del set, es decir el con menor cantidad de followers tiene menor cantidad que el nuevo nodo a obsercar se elimina y añade el nuevo
+                if (influyentes.begin()->first < pair.second.followers.size())
                 {
                     influyentes.erase(influyentes.begin());
                     influyentes.insert({pair.second.followers.size(),pair.first});
@@ -176,9 +194,10 @@ public:
     
     ~Grafo() {};
 
-
+    //Funcion publica para imprimir un usuario y su información asociada
     void imprimirUsuario(const string& username) const {
         
+        //Se busca si existe el usuario
         auto it = nodos.find(username);
         if (it != nodos.end()) {
             // it es un puntero a clave, valor)
@@ -186,9 +205,9 @@ public:
             const User& usuario = it->second; //Debido a que se usa const en la funcion, es necesario usar const aqui ya
             
             cout << "---Datos del Usuario: " << usuario.username << " ---" << endl;
-            //cout << "ID: " << usuario.ID << endl;
+            cout << "ID: " << usuario.ID << endl;
             cout << "Username: " << usuario.username << endl;
-            //cout << "N de Tweets: " << usuario.n_tweets << endl;
+            cout << "N de Tweets: " << usuario.n_tweets << endl;
             cout << "N de Amigos (Friends): " << usuario.friends_count << endl;
             cout << "N de Seguidores (Followers): " << usuario.follower_count << endl;
             cout << "Inlfuencia (PageRank) : " << usuario.PageRank << endl;
@@ -208,7 +227,7 @@ public:
             }
         }
 
-
+    //Funcion que muestra el Top 10 de usuarios mas influyentes de forma descendiente 
     void TopInfluyentes() const {
 
             cout << "**Raking top 10 cuentas mas influyentes**"<<endl;
@@ -221,7 +240,7 @@ public:
                 <<   ", Indice Politico [I, C, L, D]: [" << nodos.at(it->second).political_index[0] <<  "," << nodos.at(it->second).political_index[1] <<"," << nodos.at(it->second).political_index[2] <<"," << nodos.at(it->second).political_index[3] << "]" <<  endl;
             }
         }
-
+    //Funcion que muestra el Top 10 de usuarios mas influenciables de forma descendiente
     void TopInfluenciables() const {
 
         cout << "**Raking top 10 cuentas mas influenciables**"<<endl;
@@ -254,12 +273,13 @@ public:
         return {};
         } 
     }
-    //Implementacion de DFS a partir de los datos los vecinos in o out dependiendo de la opcion colocado,
+    //Implementacion de recursiva de DFS a partir de los datos los vecinos in o out dependiendo de la opcion colocado,
     // Si IN_degree es false, se obtiene el DFS normal (vecinos_out)
     // Si IN_degree es true, se obtiene el DFS del grafo inverso (vecinos_in)
     //Si Pre_order el resultado se reporta en forma pre order, sino se reporta en postorder
     vector<string> DFS(const string& username,const bool IN_degree,bool Pre_order) const{
 
+        //Si nodos.count(username) = 0 significa que no existe el usuario en el mapa
         if(nodos.count(username) == 0){
             cout << username << " no es parte del grafo!!!!" << endl;
             return {};
@@ -273,6 +293,7 @@ public:
         return resultados;
     }
     
+    //Funcion que implementa una busqueda BFS a partir de un nodo en particular
     vector<string> BFS(const string& username,const bool IN_degree) const{
         auto it = nodos.find(username);
         if (it != nodos.end())
