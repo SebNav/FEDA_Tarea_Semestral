@@ -460,6 +460,7 @@ public:
     void Tendencia_politica(const string& izquieda,const string& centro,const string& libertario,const string& derecha)
     {
         //Se inicializan los nodos semillas de los distintos partidos politicos
+        
         nodos[izquieda].political_index   = {100.0,0,0,0};
         nodos[centro].political_index     = {0,100.0,0,0};
         nodos[libertario].political_index = {0,0,100.0,0};
@@ -557,8 +558,35 @@ public:
 
         return tamañoKB;
     }
+    //Funcion que calcula el promedio de la orientacion politica de un conjunto de datos
+    //Se utilizo en este trabajo para ver el indice politico promedio de la componente conexa mas grande
+    vector<float> Average_PI(const vector<string>& conjunto) const{
 
+        vector<float> PI(4, 0.0);
+        for (const string& user : conjunto)
+        {
+            auto it = nodos.find(user);
+            if (it != nodos.end())
+            {
+                PI[0] += it->second.political_index[0];
+                PI[1] += it->second.political_index[1];
+                PI[2] += it->second.political_index[2];
+                PI[3] += it->second.political_index[3];
+            }
+            else { 
+                cout << user << " no es parte del grafo!!!!" << endl;
+                return {};
+            }
+            
+        }
+        
+        PI[0] = PI[0]/conjunto.size();
+        PI[1] = PI[1]/conjunto.size();
+        PI[2] = PI[2]/conjunto.size();
+        PI[3] = PI[3]/conjunto.size();
 
+        return PI;
+    }
 };
 
 
@@ -592,10 +620,27 @@ int main(){
     size_t tamaño_Kbyte =mi_grafo.Size_grafoKB();
     cout << "Tamaño total de la clase grafo " << tamaño_Kbyte << endl;
 
+    mi_grafo.TopInfluenciables();
+    mi_grafo.TopInfluyentes();
 
 
+    vector<vector<string>> CFC = mi_grafo.CFC();
+    cout << "El grafo tiene en total " << CFC.size() << "componentes fuertemente conexas" <<endl;
+    int i = 0;
+    for(const vector<string>& componente : CFC){
+        if(componente.size() > 1) {
+        cout << "CFC " << i << " N° nodos : "  << componente.size() << endl;
+        }
+        i++;
 
-/*     mi_grafo.imprimirUsuario("jcmr2009");
+    } 
+    cout << CFC[39054].size() << endl;
+    
+    vector<float> PI_CFC = mi_grafo.Average_PI(CFC[39054]);
+    cout << PI_CFC[0] << " " << PI_CFC[1] << " " << PI_CFC[2] << " " << PI_CFC[3] << endl;
+    mi_grafo.imprimirUsuario("latercera");
+
+/*     
     mi_grafo.imprimirUsuario("pachidiaze");
     mi_grafo.imprimirUsuario("Juventud_2021CL");
     mi_grafo.RandomPrint(10,19);
@@ -613,8 +658,7 @@ int main(){
     mi_grafo.RandomPrint(5,10);
  */
 
-    //mi_grafo.TopInfluenciables();
-    //mi_grafo.TopInfluyentes();
+
 
 /*      vector<string> vecinos_in = mi_grafo.vecinos_in("patriciorosas");
     //print_string_vector(vecinos_in,"vecinos in/followers de patriciorosas");
@@ -629,13 +673,8 @@ int main(){
     vector<string> DFS_b = mi_grafo.DFS("patriciorosas",false,false);
     print_string_vector(DFS_b,"DFS desde 'c_flores_c' out degree, con post orden");
 
-    vector<vector<string>> CFC = mi_grafo.CFC();
-    cout << "El grafo tiene en total " << CFC.size() << "componentes fuertemente conexas" <<endl;
-    int i = 1;
-    for(const vector<string>& componente : CFC){
-        if(componente.size() > 1) cout << "CFC " << i++ << " N° nodos : "  << componente.size() << endl;
 
-    } 
+
 
  */
     return 0;
