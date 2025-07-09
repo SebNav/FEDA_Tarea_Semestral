@@ -352,8 +352,9 @@ public:
         }
 
         vector<vector<string>> componentes_FC;
-        visitados.clear(); //Se limpia visitados porq se volvera a realizar DFS esta vez para obtener las componestes
+        visitados.clear(); //Se limpia la variable visitados para el segundo DFS que se realizara
 
+        //DFS del grafo transpuesto (es decir In-order) sigiendo el orden de la pila
         while (!pila.empty())
         {
             string nodo = pila.top();
@@ -370,8 +371,10 @@ public:
 
     }
 
+    //Funcioón para impirmir aletoriamente la informacion de x cantidad de sujetos del grafo
     void RandomPrint(const int& cantidad,const int& random_state) const{
 
+        
         default_random_engine engine(random_state);
         uniform_int_distribution<int> distribution(0,keys.size()-1);
         for (size_t i = 0; i < cantidad; i++)
@@ -388,17 +391,20 @@ public:
     //Funcion que calcula el PageRank lo que seria el nivel de inflencia de cada nodo a partir del algoritmo PageRank de google
     void PageRanking(const int& iterations) {
 
-        unordered_map<string,float> next_PageRank;
+        unordered_map<string,float> next_PageRank; //Mapa para almacenar los nuevos valores del PageRank
         float PageRank_value;
         float d = 0.85; //Factor de amortiguacion
         float suma_votos;//Sumatoria de votos del nodo
-        //proceso iterativo que modificia el PageRank de cada Nodo,
+        
 
         cout << "Se inicia el proceso de calculo de PageRank para cada nodo del grafo para " << iterations << " cantidad de iteraciones" << endl;
+
+        //proceso iterativo que modificia el PageRank de cada Nodo
         for (size_t i = 0; i < iterations; i++)
         {
             //cout << "**Iteracion " << i << "**" << endl; 
             //Se itera para cada nodo y se actualiza el page rank
+            //Se itera para cada nodo del grafo y se calcula un nuevo valor de PageRank
             for (auto& pair: nodos)
             {
                 //Calculo de la formula standar de PageRank
@@ -408,8 +414,10 @@ public:
                     suma_votos += nodos[key].PageRank/static_cast<float>(nodos[key].friends_count);
                     
                 }
-
+                //Se calcula el pagerank con la formula estandar
                 PageRank_value = (1-d)/nodos.size() + d*suma_votos;
+                //Se guarda en otra variable y despues se guarda debido a que si se guardara inmediatamente afectaria al calculo de futuros nodos que sigan a este sujeto
+                //modificando el calculo de la variable
                 next_PageRank.insert({pair.first,PageRank_value});
                 
             }
