@@ -33,6 +33,27 @@ struct User{
     vector<float> political_index; //Vector que contendra el indice politico de cada usuario
     float PageRank; //Indice de influencia de cada nodo basado en el algoritmo de pageRank google
     
+
+    size_t Size_user() const{
+        size_t tamaño = 0;
+        tamaño += sizeof(ID); // ID
+        tamaño += sizeof(n_tweets);
+        tamaño += sizeof(follower_count);
+        tamaño += sizeof(friends_count);
+        tamaño += sizeof(PageRank);
+        tamaño += sizeof(username) +  username.capacity();
+        for(const string& f : followers)
+        {
+            tamaño += sizeof(f) + f.capacity();
+        }
+        for(const string& f : friends)
+        {
+            tamaño += sizeof(f) + f.capacity();
+        }
+        tamaño += sizeof(political_index) + (political_index.capacity()*sizeof(float));
+        
+        return tamaño;
+    };
 };
 
 //Clase que representa un grafo dirigado de usuarios de twitters
@@ -497,6 +518,47 @@ public:
         }
         cout << "Cálculo de tendencias Politicas finalizado finalizado." << endl;
     }
+
+    size_t Size_grafoB() const{
+
+        size_t size_graph = 0;
+
+        //Size del unordered_map nodos
+        for (const auto& pair : nodos)
+        {
+            size_graph += sizeof(pair.first) + pair.first.capacity(); //Tamaño de la key
+            size_graph += pair.second.Size_user();
+        }
+        //Size del multiset influyentes
+        for (const auto& pair: influyentes)
+        {
+            size_graph += sizeof(pair.first);
+            size_graph += sizeof(pair.second) + pair.second.capacity();
+        }
+        //Size del multiset influenciables
+        for (const auto& pair: influenciables)
+        {
+            size_graph += sizeof(pair.first);
+            size_graph += sizeof(pair.second) + pair.second.capacity();
+        }
+        //Size keys
+        for (const string& key : keys)
+        {
+            size_graph += sizeof(key) + key.capacity();
+        }
+        
+        return size_graph;
+        
+    }
+
+    size_t Size_grafoKB() const{
+
+        size_t tamañoKB = Size_grafoB()/1000;
+
+        return tamañoKB;
+    }
+
+
 };
 
 
@@ -524,11 +586,20 @@ int main(){
     mi_grafo.imprimirUsuario("Cooperativa"); */
     mi_grafo.PageRanking(100);
     mi_grafo.Tendencia_politica(izquierda,centro,libertario,derecha);
-    mi_grafo.imprimirUsuario("jcmr2009");
+
+    size_t tamaño_byte =mi_grafo.Size_grafoB();
+    cout << "Tamaño total de la clase grafo " << tamaño_byte << endl;
+    size_t tamaño_Kbyte =mi_grafo.Size_grafoKB();
+    cout << "Tamaño total de la clase grafo " << tamaño_Kbyte << endl;
+
+
+
+
+/*     mi_grafo.imprimirUsuario("jcmr2009");
     mi_grafo.imprimirUsuario("pachidiaze");
     mi_grafo.imprimirUsuario("Juventud_2021CL");
     mi_grafo.RandomPrint(10,19);
-    mi_grafo.imprimirUsuario("Keutdertapia");
+    mi_grafo.imprimirUsuario("Keutdertapia"); */
 /*     mi_grafo.RandomPrint(3,42);
     mi_grafo.imprimirUsuario("Cooperativa");
 
