@@ -237,7 +237,7 @@ public:
 
 
                 cout << "Rank " << rank << ": " << "'" << it->second << "' ," << it->first 
-                <<   ", Indice Politico [I, C, L, D]: [" << nodos.at(it->second).political_index[0] <<  "," << nodos.at(it->second).political_index[1] <<"," << nodos.at(it->second).political_index[2] <<"," << nodos.at(it->second).political_index[3] << "]" <<  endl;
+                << " PageRank: " << nodos.at(it->second).PageRank << ", Indice Politico [I, C, L, D]: [" << nodos.at(it->second).political_index[0] <<  "," << nodos.at(it->second).political_index[1] <<"," << nodos.at(it->second).political_index[2] <<"," << nodos.at(it->second).political_index[3] << "]" <<  endl;
             }
         }
     //Funcion que muestra el Top 10 de usuarios mas influenciables de forma descendiente
@@ -248,7 +248,7 @@ public:
         for (auto it = influenciables.rbegin(); it != influenciables.rend();++it,++rank)
         {
                 cout << "Rank " << rank << ": " << "'" << it->second << "' ," << it->first 
-                <<   "Indice Politico [I, C, L, D]: [" << nodos.at(it->second).political_index[0] <<  "," << nodos.at(it->second).political_index[1] <<"," << nodos.at(it->second).political_index[2] <<"," << nodos.at(it->second).political_index[3] << "]" <<  endl;
+                << " PageRank: " << nodos.at(it->second).PageRank << ", Indice Politico [I, C, L, D]: [" << nodos.at(it->second).political_index[0] <<  "," << nodos.at(it->second).political_index[1] <<"," << nodos.at(it->second).political_index[2] <<"," << nodos.at(it->second).political_index[3] << "]" <<  endl;
         }
 
 
@@ -512,24 +512,32 @@ int main(){
     string derecha = "soyvaldiviacl";
 
 
-    mi_grafo.RandomPrint(3,42);
+/*     mi_grafo.RandomPrint(3,42);
+    mi_grafo.imprimirUsuario("Cooperativa"); */
     mi_grafo.PageRanking(100);
-    mi_grafo.RandomPrint(3,42);
-
-
     mi_grafo.Tendencia_politica(izquierda,centro,libertario,derecha);
+    mi_grafo.imprimirUsuario("jcmr2009");
+    mi_grafo.imprimirUsuario("pachidiaze");
+    mi_grafo.imprimirUsuario("Juventud_2021CL");
+    mi_grafo.RandomPrint(10,19);
+    mi_grafo.imprimirUsuario("Keutdertapia");
+/*     mi_grafo.RandomPrint(3,42);
+    mi_grafo.imprimirUsuario("Cooperativa");
+
+
+    
 
     mi_grafo.imprimirUsuario("Cooperativa");
     mi_grafo.imprimirUsuario("latercera");
     mi_grafo.imprimirUsuario("elmostrador");
     mi_grafo.imprimirUsuario("CherieA81311446");
     mi_grafo.RandomPrint(5,10);
+ */
 
+    //mi_grafo.TopInfluenciables();
+    //mi_grafo.TopInfluyentes();
 
-    mi_grafo.TopInfluenciables();
-    mi_grafo.TopInfluyentes();
-
-/*     vector<string> vecinos_in = mi_grafo.vecinos_in("patriciorosas");
+/*      vector<string> vecinos_in = mi_grafo.vecinos_in("patriciorosas");
     //print_string_vector(vecinos_in,"vecinos in/followers de patriciorosas");
 
     vector<string> vecinos_out = mi_grafo.vecinos_out("patriciorosas");
@@ -548,9 +556,9 @@ int main(){
     for(const vector<string>& componente : CFC){
         if(componente.size() > 1) cout << "CFC " << i++ << " N° nodos : "  << componente.size() << endl;
 
-    } */
+    } 
 
-
+ */
     return 0;
 }
 
