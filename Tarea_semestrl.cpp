@@ -15,6 +15,7 @@
 #include<unordered_map>
 #include<unordered_set>
 #include<queue>
+#include<iomanip>
 
 
 using namespace std;
@@ -252,29 +253,49 @@ public:
     //Funcion que muestra el Top 10 de usuarios mas influyentes de forma descendiente 
     void TopInfluyentes() const {
 
+            cout << "-----------------------------------------"<<endl;
             cout << "**Raking top 10 cuentas mas influyentes**"<<endl;
+            cout << left << setw(8) << "Ranking" 
+            << setw(18) << "Username"
+            << setw(15) << "N° seguidores"
+            << setw(20) << "PageRank"
+            << setw(34)<< "Indice Politico [I, C, L, D]"  << endl;
+ 
             int rank = 1;
             for (auto it = influyentes.rbegin(); it != influyentes.rend();++it,++rank)
             {
-
-
-                cout << "Rank " << rank << ": " << "'" << it->second << "' ," << it->first 
-                << " PageRank: " << nodos.at(it->second).PageRank << ", Indice Politico [I, C, L, D]: [" << nodos.at(it->second).political_index[0] <<  "," << nodos.at(it->second).political_index[1] <<"," << nodos.at(it->second).political_index[2] <<"," << nodos.at(it->second).political_index[3] << "]" <<  endl;
+                cout << left << setw(8) << "Rank " + to_string(rank) + ":"
+                << setw(18) << it->second
+                << setw(15) << it->first
+                << setw(20) << nodos.at(it->second).PageRank
+                << "[" << setw(12) << nodos.at(it->second).political_index[0] << ", " << setw(12) << nodos.at(it->second).political_index[1] 
+                << ", " << setw(12) << nodos.at(it->second).political_index[2] << "," << setw(12) << nodos.at(it->second).political_index[3] << "]" << endl;
             }
+            cout << "-----------------------------------------"<<endl;
         }
     //Funcion que muestra el Top 10 de usuarios mas influenciables de forma descendiente
     void TopInfluenciables() const {
-
-        cout << "**Raking top 10 cuentas mas influenciables**"<<endl;
-        int rank = 1;
-        for (auto it = influenciables.rbegin(); it != influenciables.rend();++it,++rank)
-        {
-                cout << "Rank " << rank << ": " << "'" << it->second << "' ," << it->first 
-                << " PageRank: " << nodos.at(it->second).PageRank << ", Indice Politico [I, C, L, D]: [" << nodos.at(it->second).political_index[0] <<  "," << nodos.at(it->second).political_index[1] <<"," << nodos.at(it->second).political_index[2] <<"," << nodos.at(it->second).political_index[3] << "]" <<  endl;
-        }
-
-
+            cout << "-----------------------------------------"<<endl;
+            cout << "**Raking top 10 cuentas más influyenciables**"<<endl;
+            cout << left << setw(8) << "Ranking" 
+            << setw(18) << "Username"
+            << setw(15) << "N° seguidos"
+            << setw(20) << "PageRank"
+            << setw(34)<< "Indice Politico [I, C, L, D]"  << endl;
+ 
+            int rank = 1;
+            for (auto it = influyentes.rbegin(); it != influyentes.rend();++it,++rank)
+            {
+                cout << left << setw(8) << "Rank " + to_string(rank) + ":"
+                << setw(18) << it->second
+                << setw(15) << it->first
+                << setw(20) << nodos.at(it->second).PageRank
+                << "[" << setw(12) << nodos.at(it->second).political_index[0] << ", " << setw(12) << nodos.at(it->second).political_index[1] 
+                << ", " << setw(12) << nodos.at(it->second).political_index[2] << "," << setw(12) << nodos.at(it->second).political_index[3] << "]" << endl;
+            }
+            cout << "-----------------------------------------"<<endl;
     }
+    
     //Implementacion de funcion que retorna los vecinos de entrada o in-degree  de un nodo o followers de una cuenta
     vector<string> vecinos_in(const string& username) const{
 
@@ -419,7 +440,7 @@ public:
         float suma_votos;//Sumatoria de votos del nodo
         
 
-        cout << "Se inicia el proceso de calculo de PageRank para cada nodo del grafo para " << iterations << " cantidad de iteraciones" << endl;
+        cout << "Se inicia el proceso de calculo de PageRank para cada nodo del grafo para " << iterations << " iteraciones" << endl;
 
         //proceso iterativo que modificia el PageRank de cada Nodo
         for (size_t i = 0; i < iterations; i++)
@@ -458,9 +479,9 @@ public:
     }    
     
     //Algoritmo de propagacion que calcula a partir de nodos semillas la influecian politica utilizando el Influencia(Pagerank) de cada nodo
-    void Tendencia_politica(const vector<string>& izquieda,const vector<string>& centro,const vector<string>& libertario,const vector<string>& derecha)
+    void Tendencia_politica(const vector<string>& izquieda,const vector<string>& centro,const vector<string>& libertario,const vector<string>& derecha,const int& iterations)
     {
-        
+        cout << "Se inicia el proceso de calculo de la tendencia politica  para cada nodo del grafo para " << iterations << " iteraciones" << endl;
         //Se inicializan los nodos semillas de los distintos partidos politicos
         unordered_set<string> semillas;
         for(const string& key : izquieda){
@@ -479,7 +500,7 @@ public:
 
         
         //Cantidad de iteraciones, al igual que pageRank a mayor cantidad de iteraciones los nodos convergen a un valor
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < iterations; ++i) {
             unordered_map<string, vector<float>> next_political_index;
             
             //Para cada nodo se actualiza su valor
@@ -528,7 +549,7 @@ public:
                 pair.second.political_index = next_political_index[pair.first];
             }
         }
-        cout << "Cálculo de tendencias Politicas finalizado finalizado." << endl;
+        
 
         //Calculo de tendencia politica global
         for (const auto& pair : nodos)
@@ -614,7 +635,8 @@ public:
 
     void globalPI() const{
 
-        cout << "Indice Politico global del grafo [I, C, L, D] :[ " << global_PI[0] << ", "<< global_PI[1] << ", "<< global_PI[2] << ", "<<  global_PI[3] << "]"<<  endl;
+        cout << "Indice Politico GLOBAL del grafo [I, C, L, D] :[" << global_PI[0] << ", "<< global_PI[1] << ", "<< global_PI[2] << ", "<<  global_PI[3] << "]"<<  endl;
+        cout << "-------------------------------------------------" << endl;
     }
 };
 
@@ -633,80 +655,28 @@ void print_string_vector(const vector<string>& s,const string& frase_previa) {
 int main(){
 
     Grafo mi_grafo("twitter_users.csv","twitter_connections.csv");
+    //Declaracion de usuarios semillasd
     vector<string> izquierda = {"Cooperativa"};
     vector<string> centro = {"latercera"};
-    vector<string> libertario = {"elmostrador","pachidiaze","DBustosKorts","jcmr2009","invicente"};
+    vector<string> libertario = {"elmostrador"};
     vector<string> derecha = {"soyvaldiviacl"};
 
 
-/*     mi_grafo.RandomPrint(3,42);
-    mi_grafo.imprimirUsuario("Cooperativa"); */
     mi_grafo.PageRanking(100);
-    mi_grafo.Tendencia_politica(izquierda,centro,libertario,derecha);
+    mi_grafo.Tendencia_politica(izquierda,centro,libertario,derecha,100);
 
-    size_t tamaño_byte =mi_grafo.Size_grafoB();
-    cout << "Tamaño total de la clase grafo " << tamaño_byte << endl;
-    size_t tamaño_Kbyte =mi_grafo.Size_grafoKB();
-    cout << "Tamaño total de la clase grafo " << tamaño_Kbyte << endl;
 
     mi_grafo.TopInfluenciables();
     mi_grafo.TopInfluyentes();
-
-
-    vector<vector<string>> CFC = mi_grafo.CFC();
-    cout << "El grafo tiene en total " << CFC.size() << "componentes fuertemente conexas" <<endl;
-    int i = 0;
-    for(const vector<string>& componente : CFC){
-        if(componente.size() > 1) {
-        cout << "CFC " << i << " N° nodos : "  << componente.size() << endl;
-        }
-        i++;
-
-    } 
-    cout << CFC[39054].size() << endl;
-    
-    vector<float> PI_CFC = mi_grafo.Average_PI(CFC[39054]);
-    cout << PI_CFC[0] << " " << PI_CFC[1] << " " << PI_CFC[2] << " " << PI_CFC[3] << endl;
-    //mi_grafo.imprimirUsuario("pachidiaze");
+    mi_grafo.RandomPrint(5,12);
+    size_t tamaño_Kbyte =  mi_grafo.Size_grafoKB();
+    cout << "El tamaño total de la clase grafo es de : " << tamaño_Kbyte << " KB" << endl;
+    cout << "-------------------------------------------------" << endl;
     mi_grafo.globalPI();
 
-/*     
-    mi_grafo.imprimirUsuario("pachidiaze");
-    mi_grafo.imprimirUsuario("Juventud_2021CL");
-    mi_grafo.RandomPrint(10,19);
-    mi_grafo.imprimirUsuario("Keutdertapia"); */
-/*     mi_grafo.RandomPrint(3,42);
-    mi_grafo.imprimirUsuario("Cooperativa");
-
-
-    
-
-    mi_grafo.imprimirUsuario("Cooperativa");
-    mi_grafo.imprimirUsuario("latercera");
-    mi_grafo.imprimirUsuario("elmostrador");
-    mi_grafo.imprimirUsuario("CherieA81311446");
-    mi_grafo.RandomPrint(5,10);
- */
 
 
 
-/*      vector<string> vecinos_in = mi_grafo.vecinos_in("patriciorosas");
-    //print_string_vector(vecinos_in,"vecinos in/followers de patriciorosas");
-
-    vector<string> vecinos_out = mi_grafo.vecinos_out("patriciorosas");
-    //print_string_vector(vecinos_out,"vecinos out/seguidos de patriciorosas");
-
-    vector<string> DFS_a = mi_grafo.DFS("patriciorosas",false,true);
-
-    print_string_vector(DFS_a,"DFS desde 'c_flores_c' out degree, con pre orden");
-
-    vector<string> DFS_b = mi_grafo.DFS("patriciorosas",false,false);
-    print_string_vector(DFS_b,"DFS desde 'c_flores_c' out degree, con post orden");
-
-
-
-
- */
     return 0;
 }
 
