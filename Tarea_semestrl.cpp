@@ -662,8 +662,8 @@ int main(){
     vector<string> derecha = {"soyvaldiviacl"};
 
 
-    mi_grafo.PageRanking(100);
-    mi_grafo.Tendencia_politica(izquierda,centro,libertario,derecha,100);
+    mi_grafo.PageRanking(50);
+    mi_grafo.Tendencia_politica(izquierda,centro,libertario,derecha,50);
 
 
     mi_grafo.TopInfluenciables();
