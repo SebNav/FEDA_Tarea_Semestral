@@ -65,7 +65,8 @@ private:
     multiset<pair<int,string>> influyentes; //Variable del tipo multiset que guardara el Top 10 de usuarios mas influyentes (Más followers)
     multiset<pair<int,string>> influenciables; //Variable del tipo multiset que guardara el Top 10 de usuarios mas influyenciables (Más seguidos)
     vector<string>   keys; // Vector que guardara todos los keys, este vector simplemente se utilzara para obtener keys de forma aletoria
-
+    vector<float> global_PI = {0.0,0.0,0.0,0.0}; 
+    
 
     //Proceso de visita para la implementacion recursiva de DFS
     //Si pre_order es Verdadero se reporta el recorrido del DFS en forma pre-order de lo contrario en post-order
@@ -184,7 +185,7 @@ public:
             pair.second.friends_count   = pair.second.friends.size(); 
             pair.second.follower_count  = pair.second.followers.size();
             pair.second.PageRank        = 1.0/nodos.size(); //Inicalizacion del PageRank de cada usuario
-            pair.second.political_index = {0.0,0.0,0.0,0.0}; //Inicializacion del indice politico de cada usuario
+            pair.second.political_index = {0,0,0,0}; //Inicializacion del indice politico de cada usuario
             keys.push_back(pair.first); //Se añade el nombre de usuario al vector de keys
             //Mientras no se tengan 10 datos simplemente se guardan el usuario y su numero de seguidores y friends
             //Se guarda primero en el par la cantidad de friends/followers ya que el multiset ordenara a partir de esta variable first
@@ -457,25 +458,35 @@ public:
     }    
     
     //Algoritmo de propagacion que calcula a partir de nodos semillas la influecian politica utilizando el Influencia(Pagerank) de cada nodo
-    void Tendencia_politica(const string& izquieda,const string& centro,const string& libertario,const string& derecha)
+    void Tendencia_politica(const vector<string>& izquieda,const vector<string>& centro,const vector<string>& libertario,const vector<string>& derecha)
     {
-        //Se inicializan los nodos semillas de los distintos partidos politicos
         
-        nodos[izquieda].political_index   = {100.0,0,0,0};
-        nodos[centro].political_index     = {0,100.0,0,0};
-        nodos[libertario].political_index = {0,0,100.0,0};
-        nodos[derecha].political_index    = {0,0,0,100.0};
+        //Se inicializan los nodos semillas de los distintos partidos politicos
+        unordered_set<string> semillas;
+        for(const string& key : izquieda){
+            nodos[key].political_index = {100.0,0,0,0};
+            semillas.insert(key);}
+        for(const string& key : centro){
+            nodos[key].political_index = {0,100.0,0,0};
+            semillas.insert(key);}
+        for(const string& key : libertario){
+            nodos[key].political_index = {0,0,100.0,0};
+            semillas.insert(key);
+            }
+        for(const string& key : derecha){
+            nodos[key].political_index = {0,0,0,100.0};
+            semillas.insert(key);}
 
+        
         //Cantidad de iteraciones, al igual que pageRank a mayor cantidad de iteraciones los nodos convergen a un valor
-        for (int i = 0; i < 50; ++i) {
+        for (int i = 0; i < 100; ++i) {
             unordered_map<string, vector<float>> next_political_index;
             
             //Para cada nodo se actualiza su valor
             for (const auto& pair : nodos) {
 
-
                 // Si es un nodo semilla, su vector no cambia
-                if (pair.first == izquieda || pair.first == centro || pair.first == libertario || pair.first ==derecha) {
+                if (semillas.count(pair.first)!=0) {
 
                     next_political_index[pair.first] = pair.second.political_index;
                     continue;
@@ -518,6 +529,19 @@ public:
             }
         }
         cout << "Cálculo de tendencias Politicas finalizado finalizado." << endl;
+
+        //Calculo de tendencia politica global
+        for (const auto& pair : nodos)
+        {
+            global_PI[0] += pair.second.political_index[0];
+            global_PI[1] += pair.second.political_index[1];
+            global_PI[2] += pair.second.political_index[2];
+            global_PI[3] += pair.second.political_index[3];
+        }
+        global_PI[0] = global_PI[0]/nodos.size();
+        global_PI[1] = global_PI[1]/nodos.size();
+        global_PI[2] = global_PI[2]/nodos.size();
+        global_PI[3] = global_PI[3]/nodos.size();
     }
 
     size_t Size_grafoB() const{
@@ -587,6 +611,11 @@ public:
 
         return PI;
     }
+
+    void globalPI() const{
+
+        cout << "Indice Politico global del grafo [I, C, L, D] :[ " << global_PI[0] << ", "<< global_PI[1] << ", "<< global_PI[2] << ", "<<  global_PI[3] << "]"<<  endl;
+    }
 };
 
 
@@ -604,10 +633,10 @@ void print_string_vector(const vector<string>& s,const string& frase_previa) {
 int main(){
 
     Grafo mi_grafo("twitter_users.csv","twitter_connections.csv");
-    string izquierda = "Cooperativa";
-    string centro = "latercera";
-    string libertario = "elmostrador";
-    string derecha = "soyvaldiviacl";
+    vector<string> izquierda = {"Cooperativa"};
+    vector<string> centro = {"latercera"};
+    vector<string> libertario = {"elmostrador","pachidiaze","DBustosKorts","jcmr2009","invicente"};
+    vector<string> derecha = {"soyvaldiviacl"};
 
 
 /*     mi_grafo.RandomPrint(3,42);
@@ -638,7 +667,8 @@ int main(){
     
     vector<float> PI_CFC = mi_grafo.Average_PI(CFC[39054]);
     cout << PI_CFC[0] << " " << PI_CFC[1] << " " << PI_CFC[2] << " " << PI_CFC[3] << endl;
-    mi_grafo.imprimirUsuario("latercera");
+    //mi_grafo.imprimirUsuario("pachidiaze");
+    mi_grafo.globalPI();
 
 /*     
     mi_grafo.imprimirUsuario("pachidiaze");
