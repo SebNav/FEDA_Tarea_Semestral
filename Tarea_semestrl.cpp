@@ -284,7 +284,7 @@ public:
             << setw(34)<< "Indice Politico [I, C, L, D]"  << endl;
  
             int rank = 1;
-            for (auto it = influyentes.rbegin(); it != influyentes.rend();++it,++rank)
+            for (auto it = influenciables.rbegin(); it != influenciables.rend();++it,++rank)
             {
                 cout << left << setw(8) << "Rank " + to_string(rank) + ":"
                 << setw(18) << it->second
@@ -436,7 +436,7 @@ public:
 
         unordered_map<string,float> next_PageRank; //Mapa para almacenar los nuevos valores del PageRank
         float PageRank_value;
-        float d = 0.85; //Factor de amortiguacion
+        float d = 0.40; //Factor de amortiguacion
         float suma_votos;//Sumatoria de votos del nodo
         
 
@@ -674,7 +674,7 @@ int main(){
     cout << "-------------------------------------------------" << endl;
     mi_grafo.globalPI();
 
-
+    
 
 
     return 0;
