@@ -440,7 +440,7 @@ public:
         float suma_votos;//Sumatoria de votos del nodo
         
 
-        cout << "Se inicia el proceso de calculo de PageRank para cada nodo del grafo para " << iterations << " iteraciones" << endl;
+        //cout << "Se inicia el proceso de calculo de PageRank para cada nodo del grafo para " << iterations << " iteraciones" << endl;
 
         //proceso iterativo que modificia el PageRank de cada Nodo
         for (size_t i = 0; i < iterations; i++)
@@ -481,7 +481,7 @@ public:
     //Algoritmo de propagacion que calcula a partir de nodos semillas la influecian politica utilizando el Influencia(Pagerank) de cada nodo
     void Tendencia_politica(const vector<string>& izquieda,const vector<string>& centro,const vector<string>& libertario,const vector<string>& derecha,const int& iterations)
     {
-        cout << "Se inicia el proceso de calculo de la tendencia politica  para cada nodo del grafo para " << iterations << " iteraciones" << endl;
+        //cout << "Se inicia el proceso de calculo de la tendencia politica  para cada nodo del grafo para " << iterations << " iteraciones" << endl;
         //Se inicializan los nodos semillas de los distintos partidos politicos
         unordered_set<string> semillas;
         for(const string& key : izquieda){
@@ -640,6 +640,28 @@ public:
     }
 };
 
+//Funcion para el calculo de la media de un vector
+double mean(const vector<double>& array)
+{
+    double sum = 0.0;
+    for (double val: array)
+    {
+        sum += val;
+    }
+    return array.empty() ? 0.0  : sum / array.size();
+}
+
+//Funcion para el calculo de la desviacion estandar de un vector
+double sd(const vector<double>& array)
+{
+    double m = mean(array);
+    double sqd = 0.0;
+    for(double val: array)
+    {
+        sqd += (val-m) * (val-m);
+    }
+    return sqrt(sqd/array.size());
+}
 
 
 void print_string_vector(const vector<string>& s,const string& frase_previa) {
@@ -653,28 +675,48 @@ void print_string_vector(const vector<string>& s,const string& frase_previa) {
 }
 
 int main(){
+
+    int num_exp = 100;
+    vector<double> graph_construct_time;
+    vector<double> PageRank_time;
+    vector<double> Tendencia_politica_time;
+
+    cout << "Analisis de tiempo para las distintos metodos del grafo" << endl;
+    for (size_t e = 0; e < num_exp; e++)
+    {        
+        cout << e << endl;
+
+        //analis de tiempo para la construccion del grafo
+        auto start = std::chrono::high_resolution_clock::now();
+        Grafo mi_grafo("twitter_users.csv","twitter_connections.csv");
+        auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start);
+        graph_construct_time.push_back(duration.count());
+
+        //Declaracion de usuarios semillas
+        vector<string> izquierda = {"Cooperativa"};
+        vector<string> centro = {"latercera"};
+        vector<string> libertario = {"elmostrador"};
+        vector<string> derecha = {"soyvaldiviacl"};
+
+        //Analis de tiempo para el proceso de Pageranking
+        start = std::chrono::high_resolution_clock::now();
+        mi_grafo.PageRanking(50);
+        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start);
+        PageRank_time.push_back(duration.count());
+
+        //Analis de tiempo para el proceso de propagacion de tendencia politica
+        start = std::chrono::high_resolution_clock::now();
+        mi_grafo.Tendencia_politica(izquierda,centro,libertario,derecha,50);
+        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start);
+        Tendencia_politica_time.push_back(duration.count());
+
+    }
     
-    Grafo mi_grafo("twitter_users.csv","twitter_connections.csv");
-    //Declaracion de usuarios semillasd
-    vector<string> izquierda = {"Cooperativa"};
-    vector<string> centro = {"latercera"};
-    vector<string> libertario = {"elmostrador"};
-    vector<string> derecha = {"soyvaldiviacl"};
+    cout << left << setw(25) << "Metodo" << setw(15) << "Mean [ns]" << setw(15) << "STD [ns]" << endl;
+    cout << left << setw(25) << "Graph construction " << setw(15) << mean(graph_construct_time) << setw(15) << sd(graph_construct_time) << endl;
+    cout << left << setw(25) << "PageRanking " << setw(15) << mean(PageRank_time) << setw(15) << sd(PageRank_time) << endl;
+    cout << left << setw(25) << "Political index prop " << setw(15) << mean(Tendencia_politica_time) << setw(15) << sd(Tendencia_politica_time) << endl;
 
-
-    mi_grafo.PageRanking(50);
-    mi_grafo.Tendencia_politica(izquierda,centro,libertario,derecha,50);
-
-
-    mi_grafo.TopInfluenciables();
-    mi_grafo.TopInfluyentes();
-    mi_grafo.RandomPrint(5,12);
-    size_t tamaño_Kbyte =  mi_grafo.Size_grafoKB();
-    cout << "El tamaño total de la clase grafo es de : " << tamaño_Kbyte << " KB" << endl;
-    cout << "-------------------------------------------------" << endl;
-    mi_grafo.globalPI();
-
-    
 
 
     return 0;

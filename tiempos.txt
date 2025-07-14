@@ -1,0 +1,4 @@
+Metodo                   Mean [ns]      STD [ns]       
+Graph construction       1.1486e+08     7.54334e+06    
+PageRanking              1.61905e+09    1.45754e+08    
+Political index prop     4.4876e+09     2.63774e+08    
