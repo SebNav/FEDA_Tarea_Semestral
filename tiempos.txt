@@ -1,4 +1,5 @@
-Metodo                   Mean [ns]      STD [ns]       
-Graph construction       1.1486e+08     7.54334e+06    
-PageRanking              1.61905e+09    1.45754e+08    
-Political index prop     4.4876e+09     2.63774e+08    
+Metodo                          Mean [ns]      STD [ns]       
+Construcción de grafo          1.12312e+08    5.08986e+06    
+PageRanking                     1.56032e+09    9.98424e+07    
+Propagación de índice político 4.28109e+09    2.42836e+08    
+Tiempo total                    5.95373e+09    3.34072e+08    

@@ -680,6 +680,7 @@ int main(){
     vector<double> graph_construct_time;
     vector<double> PageRank_time;
     vector<double> Tendencia_politica_time;
+    vector<double> Tiempo_total;
 
     cout << "Analisis de tiempo para las distintos metodos del grafo" << endl;
     for (size_t e = 0; e < num_exp; e++)
@@ -687,6 +688,7 @@ int main(){
         cout << e << endl;
 
         //analis de tiempo para la construccion del grafo
+        auto start_to = std::chrono::high_resolution_clock::now();
         auto start = std::chrono::high_resolution_clock::now();
         Grafo mi_grafo("twitter_users.csv","twitter_connections.csv");
         auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start);
@@ -709,13 +711,16 @@ int main(){
         mi_grafo.Tendencia_politica(izquierda,centro,libertario,derecha,50);
         duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start);
         Tendencia_politica_time.push_back(duration.count());
+        auto duration_total = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start_to);
+        Tiempo_total.push_back(duration_total.count());
 
     }
     
-    cout << left << setw(25) << "Metodo" << setw(15) << "Mean [ns]" << setw(15) << "STD [ns]" << endl;
-    cout << left << setw(25) << "Graph construction " << setw(15) << mean(graph_construct_time) << setw(15) << sd(graph_construct_time) << endl;
-    cout << left << setw(25) << "PageRanking " << setw(15) << mean(PageRank_time) << setw(15) << sd(PageRank_time) << endl;
-    cout << left << setw(25) << "Political index prop " << setw(15) << mean(Tendencia_politica_time) << setw(15) << sd(Tendencia_politica_time) << endl;
+    cout << left << setw(32) << "Metodo" << setw(15) << "Mean [ns]" << setw(15) << "STD [ns]" << endl;
+    cout << left << setw(32) << "Construcción de grafo " << setw(15) << mean(graph_construct_time) << setw(15) << sd(graph_construct_time) << endl;
+    cout << left << setw(32) << "PageRanking " << setw(15) << mean(PageRank_time) << setw(15) << sd(PageRank_time) << endl;
+    cout << left << setw(32) << "Propagación de índice político " << setw(15) << mean(Tendencia_politica_time) << setw(15) << sd(Tendencia_politica_time) << endl;
+    cout << left << setw(32) << "Tiempo total" << setw(15) << mean(Tiempo_total) << setw(15) << sd(Tiempo_total) << endl;
 
 
 
