@@ -67,6 +67,7 @@ private:
     multiset<pair<int,string>> influenciables; //Variable del tipo multiset que guardara el Top 10 de usuarios mas influyenciables (Más seguidos)
     vector<string>   keys; // Vector que guardara todos los keys, este vector simplemente se utilzara para obtener keys de forma aletoria
     vector<float> global_PI = {0.0,0.0,0.0,0.0}; 
+    float grap_density = 0;
     
 
     //Proceso de visita para la implementacion recursiva de DFS
@@ -81,7 +82,7 @@ private:
             resultado.push_back(u);
         }
 
-        //Selecciona vecinos de entrada (followers) o salida (seguidos)
+        //Seleccionca vecinos de entrada (followers) o salida (seguidos)
         if (IN_degree) vecinos = vecinos_in(u);
         else vecinos = vecinos_out(u);
 
@@ -184,6 +185,7 @@ public:
         for(auto& pair : nodos)
         {
             pair.second.friends_count   = pair.second.friends.size(); 
+            grap_density                +=  pair.second.friends.size();
             pair.second.follower_count  = pair.second.followers.size();
             pair.second.PageRank        = 1.0/nodos.size(); //Inicalizacion del PageRank de cada usuario
             pair.second.political_index = {0,0,0,0}; //Inicializacion del indice politico de cada usuario
@@ -212,6 +214,10 @@ public:
             }
             
         }
+        
+        float max_edges = nodos.size()*(nodos.size()-1);
+        grap_density = grap_density/max_edges;
+
         
     }
     
@@ -638,6 +644,12 @@ public:
         cout << "Indice Politico GLOBAL del grafo [I, C, L, D] :[" << global_PI[0] << ", "<< global_PI[1] << ", "<< global_PI[2] << ", "<<  global_PI[3] << "]"<<  endl;
         cout << "-------------------------------------------------" << endl;
     }
+
+    void print_graph_density() const{
+
+        cout << "Densidad del grafo : " << grap_density <<  endl;
+        cout << "-------------------------------------------------" << endl;
+    }
 };
 
 
@@ -673,6 +685,7 @@ int main(){
     cout << "El tamaño total de la clase grafo es de : " << tamaño_Kbyte << " KB" << endl;
     cout << "-------------------------------------------------" << endl;
     mi_grafo.globalPI();
+    mi_grafo.print_graph_density();
 
     
 
