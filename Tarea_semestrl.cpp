@@ -62,10 +62,10 @@ class Grafo
 {
 private:
 
-    unordered_map<string,User> nodos; //Undordered map que es la base del grafo, donde la key sera el username del grafo y se guardaran en los valores la variable Usuario
-    multiset<pair<int,string>> influyentes; //Variable del tipo multiset que guardara el Top 10 de usuarios mas influyentes (Más followers)
-    multiset<pair<int,string>> influenciables; //Variable del tipo multiset que guardara el Top 10 de usuarios mas influyenciables (Más seguidos)
-    vector<string>   keys; // Vector que guardara todos los keys, este vector simplemente se utilzara para obtener keys de forma aletoria
+    unordered_map<string,User> nodos;                                               //Undordered map que es la base del grafo, donde la key sera el username del grafo y se guardaran en los valores la variable Usuario
+    multiset<pair<int,string>> influyentes;                                 //Variable del tipo multiset que guardara el Top 10 de usuarios mas influyentes (Más followers)
+    multiset<pair<int,string>> influenciables;                                  //Variable del tipo multiset que guardara el Top 10 de usuarios mas influyenciables (Más seguidos)
+    vector<string>   keys;                                                      // Vector que guardara todos los keys, este vector simplemente se utilzara para obtener keys de forma aletoria
     vector<float> global_PI = {0.0,0.0,0.0,0.0}; 
     float grap_density = 0;
     
